@@ -31,18 +31,23 @@ async def mcp_handler(request: Request):
         data = await request.json()
         method = data.get("method")
         params = data.get("params", {})
+        msg_id = data.get("id")  # Importante para JSON-RPC
         
-        logger.info(f"Recebida requisição MCP: {method}")
+        logger.info(f"Recebida requisição MCP: {method} (id: {msg_id})")
         
         if method == "initialize":
             response = {
-                "protocolVersion": "2024-11-05",
-                "capabilities": {
-                    "tools": {}
-                },
-                "serverInfo": {
-                    "name": "hello-mcp-remote",
-                    "version": "1.0.0"
+                "jsonrpc": "2.0",
+                "id": msg_id,
+                "result": {
+                    "protocolVersion": "2024-11-05",
+                    "capabilities": {
+                        "tools": {}
+                    },
+                    "serverInfo": {
+                        "name": "hello-mcp-remote",
+                        "version": "1.0.0"
+                    }
                 }
             }
             logger.info(f"Enviando resposta initialize: {response}")
@@ -50,22 +55,26 @@ async def mcp_handler(request: Request):
         
         elif method == "tools/list":
             response = {
-                "tools": [
-                    {
-                        "name": "hello",
-                        "description": "Retorna uma saudação personalizada",
-                        "inputSchema": {
-                            "type": "object",
-                            "properties": {
-                                "name": {
-                                    "type": "string",
-                                    "description": "Nome para cumprimentar"
-                                }
-                            },
-                            "required": ["name"]
+                "jsonrpc": "2.0",
+                "id": msg_id,
+                "result": {
+                    "tools": [
+                        {
+                            "name": "hello",
+                            "description": "Retorna uma saudação personalizada",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "description": "Nome para cumprimentar"
+                                    }
+                                },
+                                "required": ["name"]
+                            }
                         }
-                    }
-                ]
+                    ]
+                }
             }
             logger.info(f"Enviando resposta tools/list: {response}")
             return response
@@ -80,31 +89,56 @@ async def mcp_handler(request: Request):
                 user_name = arguments.get("name", "Mundo")
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 
-                message = f"Olá, {user_name}! 👋\n\nEste é seu MCP server REMOTO funcionando!\nTimestamp: {timestamp}\nServidor: Railway HTTP"
+                message = f"Olá, {user_name}! 👋\n\nEste é seu MCP server REMOTO funcionando!\nTimestamp: {timestamp}\nServidor: Railway HTTP direto"
                 
                 response = {
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": message
-                        }
-                    ]
+                    "jsonrpc": "2.0",
+                    "id": msg_id,
+                    "result": {
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": message
+                            }
+                        ]
+                    }
                 }
                 logger.info(f"Enviando resposta hello: {response}")
                 return response
             else:
-                error_response = {"error": f"Tool desconhecida: {tool_name}"}
+                error_response = {
+                    "jsonrpc": "2.0",
+                    "id": msg_id,
+                    "error": {
+                        "code": -1,
+                        "message": f"Tool desconhecida: {tool_name}"
+                    }
+                }
                 logger.error(f"Tool desconhecida: {tool_name}")
                 return error_response
         
         else:
-            error_response = {"error": f"Método desconhecido: {method}"}
+            error_response = {
+                "jsonrpc": "2.0",
+                "id": msg_id,
+                "error": {
+                    "code": -32601,
+                    "message": f"Método desconhecido: {method}"
+                }
+            }
             logger.error(f"Método desconhecido: {method}")
             return error_response
             
     except Exception as e:
         logger.error(f"Erro no handler MCP: {e}")
-        return {"error": str(e)}
+        return {
+            "jsonrpc": "2.0",
+            "id": data.get("id") if 'data' in locals() else None,
+            "error": {
+                "code": -32603,
+                "message": str(e)
+            }
+        }
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
