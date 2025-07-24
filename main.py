@@ -33,8 +33,10 @@ async def mcp_handler(request: Request):
         method = data.get("method")
         params = data.get("params", {})
         
+        logger.info(f"Recebida requisição MCP: {method}")
+        
         if method == "tools/list":
-            return {
+            response = {
                 "tools": [
                     {
                         "name": "hello",
@@ -52,10 +54,14 @@ async def mcp_handler(request: Request):
                     }
                 ]
             }
+            logger.info(f"Enviando resposta tools/list: {response}")
+            return response
         
         elif method == "tools/call":
             tool_name = params.get("name")
             arguments = params.get("arguments", {})
+            
+            logger.info(f"Chamando tool: {tool_name} com argumentos: {arguments}")
             
             if tool_name == "hello":
                 user_name = arguments.get("name", "Mundo")
@@ -63,7 +69,7 @@ async def mcp_handler(request: Request):
                 
                 message = f"Olá, {user_name}! 👋\n\nEste é seu MCP server remoto funcionando!\nTimestamp: {timestamp}\nServidor: Railway/Cloud"
                 
-                return {
+                response = {
                     "content": [
                         {
                             "type": "text",
@@ -71,11 +77,17 @@ async def mcp_handler(request: Request):
                         }
                     ]
                 }
+                logger.info(f"Enviando resposta hello: {response}")
+                return response
             else:
-                return {"error": f"Tool desconhecida: {tool_name}"}
+                error_response = {"error": f"Tool desconhecida: {tool_name}"}
+                logger.error(f"Tool desconhecida: {tool_name}")
+                return error_response
         
         else:
-            return {"error": f"Método desconhecido: {method}"}
+            error_response = {"error": f"Método desconhecido: {method}"}
+            logger.error(f"Método desconhecido: {method}")
+            return error_response
             
     except Exception as e:
         logger.error(f"Erro no handler MCP: {e}")
