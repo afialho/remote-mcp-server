@@ -1,2 +1,7 @@
 fastapi
 uvicorn
+crewai>=0.140.0
+openai>=1.0.0
+python-dotenv
+python-multipart
+PyJWT
