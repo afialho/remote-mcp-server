@@ -76,7 +76,9 @@ async def mcp_handler(request: Request):
                     'result': {
                         'protocolVersion': '2024-11-05',
                         'capabilities': {'tools': {}},
-                        'serverInfo': {'name': 'hello-mcp-remote', 'version': '1.0.0'}
+                        'serverInfo': {
+                            'name': 'agilize-tools-mcp', 'version': '0.0.1'
+                        }
                     }}
         logger.info(f"Enviando resposta: {response}")
         return response
