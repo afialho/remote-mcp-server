@@ -34,7 +34,21 @@ async def mcp_handler(request: Request):
         
         logger.info(f"Recebida requisição MCP: {method}")
         
-        if method == "tools/list":
+        if method == "initialize":
+            response = {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {
+                    "tools": {}
+                },
+                "serverInfo": {
+                    "name": "hello-mcp-remote",
+                    "version": "1.0.0"
+                }
+            }
+            logger.info(f"Enviando resposta initialize: {response}")
+            return response
+        
+        elif method == "tools/list":
             response = {
                 "tools": [
                     {
